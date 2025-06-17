@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Generador de Documentación
 
-## Getting Started
+Una aplicación moderna construida con **Next.js 15** y **Tailwind CSS** para generar carpetas y archivos de documentación para Docusaurus de manera simple y eficiente.
 
-First, run the development server:
+## ✨ Características
 
+- 🎨 **Interfaz moderna** con tema claro y oscuro
+- 📁 **Creación de carpetas** con archivos `_category_.json` automáticos
+- 📄 **Creación de archivos Markdown** con editor integrado
+- 🔄 **Edición en tiempo real** de elementos creados
+- 💾 **Generación física** de archivos en el sistema
+- 🎯 **Optimizado para Docusaurus**
+- 📱 **Diseño responsivo**
+
+## 🚀 Instalación
+
+1. Instalar dependencias:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Ejecutar en modo desarrollo:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Abrir [http://localhost:3000](http://localhost:3000) en tu navegador
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tecnologías Utilizadas
 
-## Learn More
+- **Next.js 15** - Framework de React
+- **React 19** - Biblioteca de interfaz de usuario
+- **Tailwind CSS v4** - Framework de CSS
+- **TypeScript** - Tipado estático
+- **Lucide React** - Iconos modernos
+- **React Hot Toast** - Notificaciones
 
-To learn more about Next.js, take a look at the following resources:
+## 📖 Uso
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Crear Carpetas
+1. Selecciona "Carpeta" como tipo de elemento
+2. Ingresa el nombre de la carpeta
+3. Añade una descripción (opcional)
+4. Establece la posición en el menú
+5. Haz clic en "Agregar Carpeta"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Crear Archivos MD
+1. Selecciona "Archivo MD" como tipo de elemento
+2. Ingresa el nombre del archivo (sin extensión)
+3. Escribe el contenido en Markdown
+4. Haz clic en "Agregar Archivo"
 
-## Deploy on Vercel
+### Generar Archivos
+1. Después de agregar elementos, haz clic en "Generar Archivos"
+2. Los archivos se crearán automáticamente en `/home/sistemas/gitbook/gorehco-docs/docs`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📁 Estructura de Archivos Generados
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Carpetas
+- Se crea la carpeta con el nombre especificado
+- Se genera automáticamente un archivo `_category_.json` con:
+  ```json
+  {
+    "label": "Nombre de la Carpeta",
+    "position": 1,
+    "link": {
+      "type": "generated-index",
+      "description": "Descripción de la carpeta"
+    }
+  }
+  ```
+
+### Archivos Markdown
+- Se crean con extensión `.md`
+- Contienen el contenido Markdown especificado
+
+## 🎨 Tema Oscuro
+
+La aplicación incluye un toggle para cambiar entre tema claro y oscuro, con transiciones suaves y persistencia de la preferencia del usuario.
+
+## 🔧 Configuración
+
+La ruta de destino para los archivos generados está configurada en:
+```typescript
+const docsPath = '/home/sistemas/gitbook/gorehco-docs/docs';
+```
+
+Puedes modificar esta ruta en el archivo `src/app/api/generate/route.ts`.
+
+## 📝 Scripts Disponibles
+
+- `npm run dev` - Ejecuta la aplicación en modo desarrollo
+- `npm run build` - Construye la aplicación para producción
+- `npm run start` - Ejecuta la aplicación en modo producción
+- `npm run lint` - Ejecuta el linter de código
+
+## 🤝 Contribución
+
+Las contribuciones son bienvenidas. Por favor, abre un issue o pull request para sugerir cambios o mejoras.
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT.
