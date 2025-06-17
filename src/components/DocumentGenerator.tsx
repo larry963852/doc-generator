@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { FolderPlus, FileText, Download, Trash2, Edit } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FolderPlus, FileText, Download, Trash2, Edit, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface FileItem {
@@ -14,6 +14,14 @@ interface FileItem {
   parentFolder?: string; // Nueva propiedad para indicar en qué carpeta va el archivo
 }
 
+interface ExistingFolder {
+  name: string;
+  path: string;
+  hasCategory: boolean;
+  position?: number;
+  type: 'existing';
+}
+
 export default function DocumentGenerator() {
   const [items, setItems] = useState<FileItem[]>([]);
   const [newItemName, setNewItemName] = useState('');
@@ -21,8 +29,55 @@ export default function DocumentGenerator() {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState('');
   const [folderDescription, setFolderDescription] = useState('');
-  const [folderPosition, setFolderPosition] = useState(1);
   const [selectedParentFolder, setSelectedParentFolder] = useState<string>(''); // Nueva state para carpeta padre
+  const [existingFolders, setExistingFolders] = useState<ExistingFolder[]>([]); // Carpetas existentes
+  const [loadingFolders, setLoadingFolders] = useState(true); // Estado de carga
+
+  const loadExistingFolders = async () => {
+    try {
+      setLoadingFolders(true);
+      const response = await fetch('/api/folders');
+      if (response.ok) {
+        const data = await response.json();
+        setExistingFolders(data.folders || []);
+      } else {
+        console.error('Error loading existing folders:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error loading existing folders:', error);
+    } finally {
+      setLoadingFolders(false);
+    }
+  };
+
+  // Cargar carpetas existentes al montar el componente
+  useEffect(() => {
+    loadExistingFolders();
+  }, []);
+
+  // Función para calcular la siguiente posición automáticamente
+  const getNextPosition = () => {
+    // Obtener todas las posiciones existentes de carpetas del sistema
+    const existingPositions = existingFolders
+      .map(folder => folder.position)
+      .filter(pos => pos !== null && pos !== undefined) as number[];
+    
+    // Obtener posiciones de carpetas creadas en esta sesión
+    const sessionPositions = items
+      .filter(item => item.type === 'folder')
+      .map(item => item.position)
+      .filter(pos => pos !== null && pos !== undefined) as number[];
+    
+    // Combinar todas las posiciones
+    const allPositions = [...existingPositions, ...sessionPositions];
+    
+    // Encontrar la posición máxima y sumar 1
+    const maxPosition = allPositions.length > 0 ? Math.max(...allPositions) : 1;
+    const nextPosition = maxPosition + 1;
+    
+    console.log(`Calculando posición: posiciones existentes [${existingPositions.join(', ')}], sesión [${sessionPositions.join(', ')}], máxima: ${maxPosition}, siguiente: ${nextPosition}`);
+    return nextPosition;
+  };
 
   const addItem = () => {
     if (!newItemName.trim()) {
@@ -38,7 +93,7 @@ export default function DocumentGenerator() {
 
     if (newItemType === 'folder') {
       newItem.description = folderDescription || `Documentación de ${newItemName}`;
-      newItem.position = folderPosition;
+      newItem.position = getNextPosition();
     } else {
       newItem.content = fileContent || `# ${newItemName}\n\nContenido del documento.`;
       newItem.parentFolder = selectedParentFolder || undefined; // Asignar carpeta padre si se seleccionó
@@ -49,7 +104,6 @@ export default function DocumentGenerator() {
     setFileContent('');
     setFolderDescription('');
     setSelectedParentFolder(''); // Limpiar selección de carpeta padre
-    setFolderPosition(folderPosition + 1);
     toast.success(`${newItemType === 'folder' ? 'Carpeta' : 'Archivo'} agregado exitosamente`);
   };
 
@@ -66,7 +120,7 @@ export default function DocumentGenerator() {
       setNewItemType(item.type);
       if (item.type === 'folder') {
         setFolderDescription(item.description || '');
-        setFolderPosition(item.position || 1);
+        // No necesitamos setFolderPosition ya que se calcula automáticamente
       } else {
         setFileContent(item.content || '');
         setSelectedParentFolder(item.parentFolder || ''); // Cargar carpeta padre
@@ -82,7 +136,7 @@ export default function DocumentGenerator() {
         const updatedItem = { ...item, name: newItemName };
         if (item.type === 'folder') {
           updatedItem.description = folderDescription;
-          updatedItem.position = folderPosition;
+          updatedItem.position = item.position; // Mantener la posición original al editar
         } else {
           updatedItem.content = fileContent;
           updatedItem.parentFolder = selectedParentFolder || undefined; // Actualizar carpeta padre
@@ -126,6 +180,8 @@ export default function DocumentGenerator() {
       if (response.ok) {
         const result = await response.json();
         toast.success(`Archivos generados exitosamente en: ${result.path}`);
+        // Recargar carpetas existentes después de generar archivos
+        await loadExistingFolders();
       } else {
         const error = await response.json();
         toast.error(`Error: ${error.message}`);
@@ -221,18 +277,6 @@ export default function DocumentGenerator() {
                       placeholder="Descripción de la carpeta para la documentación"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Posición
-                    </label>
-                    <input
-                      type="number"
-                      value={folderPosition}
-                      onChange={(e) => setFolderPosition(parseInt(e.target.value) || 1)}
-                      min="1"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-600 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    />
-                  </div>
                 </>
               )}
 
@@ -240,25 +284,62 @@ export default function DocumentGenerator() {
               {newItemType === 'file' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Carpeta destino
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Carpeta destino
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toast.promise(loadExistingFolders(), {
+                            loading: 'Actualizando carpetas...',
+                            success: 'Carpetas actualizadas',
+                            error: 'Error actualizando carpetas'
+                          });
+                        }}
+                        className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                        title="Actualizar lista de carpetas"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${loadingFolders ? 'animate-spin' : ''}`} />
+                      </button>
+                    </div>
                     <select
                       value={selectedParentFolder}
                       onChange={(e) => setSelectedParentFolder(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-gray-600 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      disabled={loadingFolders}
                     >
                       <option value="">📄 Raíz del proyecto (docs/)</option>
-                      {items
-                        .filter(item => item.type === 'folder')
-                        .map(folder => (
-                          <option key={folder.id} value={folder.name}>
-                            📁 {folder.name}
-                          </option>
-                        ))}
+                      
+                      {/* Carpetas existentes en el sistema */}
+                      {existingFolders.length > 0 && (
+                        <optgroup label="📁 Carpetas existentes">
+                          {existingFolders.map(folder => (
+                            <option key={`existing-${folder.name}`} value={folder.name}>
+                              {folder.hasCategory ? '📋' : '📁'} {folder.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      
+                      {/* Carpetas creadas en esta sesión */}
+                      {items.filter(item => item.type === 'folder').length > 0 && (
+                        <optgroup label="🆕 Carpetas de esta sesión">
+                          {items
+                            .filter(item => item.type === 'folder')
+                            .map(folder => (
+                              <option key={`new-${folder.id}`} value={folder.name}>
+                                🆕 {folder.name}
+                              </option>
+                            ))}
+                        </optgroup>
+                      )}
                     </select>
                     <p className="text-xs text-gray-400 mt-1">
-                      Selecciona en qué carpeta se creará el archivo markdown
+                      {loadingFolders ? 
+                        '⏳ Cargando carpetas existentes...' : 
+                        'Selecciona en qué carpeta se creará el archivo markdown'
+                      }
                     </p>
                   </div>
                   <div>
@@ -353,7 +434,7 @@ export default function DocumentGenerator() {
                         {item.type === 'folder' && (
                           <>
                             <p className="text-sm text-gray-400">
-                              Posición: {item.position}
+                              Posición: {item.position} (automática)
                             </p>
                             <p className="text-xs text-gray-500">
                               📁 Generará: _category_.json

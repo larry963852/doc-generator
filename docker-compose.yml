@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  docs-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    container_name: docs-generator-app
+    
+  # Opcional: Si quieres usar nginx como proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - docs-generator
+  #   restart: unless-stopped

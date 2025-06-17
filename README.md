@@ -1,23 +1,61 @@
 # Generador de Documentación
 
-Una aplicación moderna construida con **Next.js 15** y **Tailwind CSS** para generar carpetas y archivos de documentación para Docusaurus de manera simple y eficiente.
+Una aplicación moderna construida con **Next.js 15**, **TailwindCSS** y **Tiptap** para generar carpetas y archivos de documentación para Docusaurus de manera simple y eficiente.
 
 ## ✨ Características
 
-- 🎨 **Interfaz moderna** con tema claro y oscuro
+- 🎨 **Interfaz moderna** con tema oscuro elegante
 - 📁 **Creación de carpetas** con archivos `_category_.json` automáticos
-- 📄 **Creación de archivos Markdown** con editor integrado
-- 🔄 **Edición en tiempo real** de elementos creados
+- 📄 **Creación de archivos Markdown** con editor Tiptap integrado
+- � **Editor enriquecido** con toolbar completo (títulos, listas, negritas, etc.)
+- 🗂️ **Selección de carpeta padre** para organizar archivos
+- �🔄 **Edición en tiempo real** de elementos creados
 - 💾 **Generación física** de archivos en el sistema
 - 🎯 **Optimizado para Docusaurus**
 - 📱 **Diseño responsivo**
 
 ## 🚀 Instalación
 
+### Desarrollo Local
+
 1. Instalar dependencias:
 ```bash
 npm install
 ```
+
+2. Ejecutar en modo desarrollo:
+```bash
+npm run dev
+```
+
+3. Abrir [http://localhost:3000](http://localhost:3000) en tu navegador
+
+### 🐳 Docker
+
+#### Opción 1: Docker Compose (Recomendado)
+
+```bash
+# Construir y ejecutar
+npm run docker:compose:build
+
+# Solo ejecutar (si ya está construido)
+npm run docker:compose:up
+
+# Detener
+npm run docker:compose:down
+```
+
+#### Opción 2: Docker tradicional
+
+```bash
+# Construir la imagen
+npm run docker:build
+
+# Ejecutar el contenedor
+npm run docker:run
+```
+
+La aplicación estará disponible en [http://localhost:3002](http://localhost:3002)
 
 2. Ejecutar en modo desarrollo:
 ```bash
