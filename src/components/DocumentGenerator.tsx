@@ -18,8 +18,14 @@ interface ExistingFolder {
   name: string;
   path: string;
   hasCategory: boolean;
-  position?: number;
+  position?: number | null;
   type: 'existing';
+}
+
+interface ApiResponse {
+  success: boolean;
+  folders: ExistingFolder[];
+  path: string;
 }
 
 export default function DocumentGenerator() {
@@ -29,53 +35,44 @@ export default function DocumentGenerator() {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState('');
   const [folderDescription, setFolderDescription] = useState('');
-  const [selectedParentFolder, setSelectedParentFolder] = useState<string>(''); // Nueva state para carpeta padre
-  const [existingFolders, setExistingFolders] = useState<ExistingFolder[]>([]); // Carpetas existentes
-  const [loadingFolders, setLoadingFolders] = useState(true); // Estado de carga
+  const [selectedParentFolder, setSelectedParentFolder] = useState<string>('');
+  const [existingFolders, setExistingFolders] = useState<ExistingFolder[]>([]);
+  const [loadingFolders, setLoadingFolders] = useState(true);
 
   const loadExistingFolders = async () => {
     try {
       setLoadingFolders(true);
       const response = await fetch('/api/folders');
       if (response.ok) {
-        const data = await response.json();
+        const data: ApiResponse = await response.json();
         setExistingFolders(data.folders || []);
+        console.log('Carpetas cargadas:', data.folders.length);
       } else {
         console.error('Error loading existing folders:', response.statusText);
+        toast.error('Error cargando carpetas existentes');
       }
     } catch (error) {
       console.error('Error loading existing folders:', error);
+      toast.error('Error cargando carpetas existentes');
     } finally {
       setLoadingFolders(false);
     }
   };
 
-  // Cargar carpetas existentes al montar el componente
   useEffect(() => {
     loadExistingFolders();
   }, []);
 
-  // Función para calcular la siguiente posición automáticamente
-  const getNextPosition = () => {
-    // Obtener todas las posiciones existentes de carpetas del sistema
-    const existingPositions = existingFolders
-      .map(folder => folder.position)
-      .filter(pos => pos !== null && pos !== undefined) as number[];
+  // Función simplificada para calcular la siguiente posición
+  const calculateNextPosition = (): number => {
+    // Total de directorios existentes + directorios creados en esta sesión + 2
+    const existingDirectoriesCount = existingFolders.length;
+    const sessionDirectoriesCount = items.filter(item => item.type === 'folder').length;
+    const totalDirectories = existingDirectoriesCount + sessionDirectoriesCount;
+    const nextPosition = totalDirectories + 2;
     
-    // Obtener posiciones de carpetas creadas en esta sesión
-    const sessionPositions = items
-      .filter(item => item.type === 'folder')
-      .map(item => item.position)
-      .filter(pos => pos !== null && pos !== undefined) as number[];
+    console.log(`Total directorios: ${totalDirectories} (existentes: ${existingDirectoriesCount}, sesión: ${sessionDirectoriesCount}) -> Siguiente posición: ${nextPosition}`);
     
-    // Combinar todas las posiciones
-    const allPositions = [...existingPositions, ...sessionPositions];
-    
-    // Encontrar la posición máxima y sumar 1
-    const maxPosition = allPositions.length > 0 ? Math.max(...allPositions) : 1;
-    const nextPosition = maxPosition + 1;
-    
-    console.log(`Calculando posición: posiciones existentes [${existingPositions.join(', ')}], sesión [${sessionPositions.join(', ')}], máxima: ${maxPosition}, siguiente: ${nextPosition}`);
     return nextPosition;
   };
 
@@ -93,10 +90,10 @@ export default function DocumentGenerator() {
 
     if (newItemType === 'folder') {
       newItem.description = folderDescription || `Documentación de ${newItemName}`;
-      newItem.position = getNextPosition();
+      newItem.position = calculateNextPosition();
     } else {
       newItem.content = fileContent || `# ${newItemName}\n\nContenido del documento.`;
-      newItem.parentFolder = selectedParentFolder || undefined; // Asignar carpeta padre si se seleccionó
+      newItem.parentFolder = selectedParentFolder || undefined;
     }
 
     setItems([...items, newItem]);

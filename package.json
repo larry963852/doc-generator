@@ -3,15 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3002",
+    "dev": "next dev --turbopack -p 3002 -H 0.0.0.0",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "docker:build": "docker build -t docs-generator .",
-    "docker:run": "docker run -p 3002:3002 docs-generator",
-    "docker:compose:up": "docker-compose up -d",
-    "docker:compose:down": "docker-compose down",
-    "docker:compose:build": "docker-compose up --build -d"
+    "start": "next start -p 3002 -H 0.0.0.0",
+    "lint": "next lint"
   },
   "dependencies": {
     "@tiptap/pm": "^2.14.0",
