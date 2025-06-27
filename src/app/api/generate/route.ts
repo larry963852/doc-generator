@@ -21,8 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No items provided' }, { status: 400 });
     }
 
-    // Ruta donde se generarán los archivos
-    const docsPath = '/home/sistemas/gitbook/gorehco-docs/docs';
+    // Detectar si estamos en Docker o desarrollo local
+    const isDocker = process.env.NODE_ENV === 'production' || existsSync('/app/gorehco-docs');
+    const docsPath = isDocker 
+      ? '/app/gorehco-docs/docs' 
+      : '/home/sistemas/gitbook/gorehco-docs/docs';
     
     // Verificar que la ruta existe
     if (!existsSync(docsPath)) {

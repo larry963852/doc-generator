@@ -13,7 +13,11 @@ interface FolderInfo {
 
 export async function GET() {
   try {
-    const docsPath = '/home/sistemas/gitbook/gorehco-docs/docs';
+    // Detectar si estamos en Docker o desarrollo local
+    const isDocker = process.env.NODE_ENV === 'production' || existsSync('/app/gorehco-docs');
+    const docsPath = isDocker 
+      ? '/app/gorehco-docs/docs' 
+      : '/home/sistemas/gitbook/gorehco-docs/docs';
     
     if (!existsSync(docsPath)) {
       return NextResponse.json({ 
